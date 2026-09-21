@@ -71,7 +71,16 @@ data:
       webSearch: false
       fileSearch: false
       runCode: false
-      mcpServers: false
+      mcpServers:
+        use: false
+        create: false
+        share: false
+        public: false
+        configureObo: false
+        toolsRefreshInterval: 0
+        statusRefreshInterval: 0
+      marketplace:
+        use: false
     modelSpecs:
       enforce: true
       prioritize: true
