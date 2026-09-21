@@ -142,6 +142,8 @@ metadata:
   namespace: {{ .Values.namespace | quote }}
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: librechat-mongodb
@@ -195,10 +197,7 @@ metadata:
 spec:
   replicas: {{ .Values.replicas }}
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
+    type: Recreate
   selector:
     matchLabels:
       app: librechat
