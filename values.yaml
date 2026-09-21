@@ -13,6 +13,9 @@ domain:
   host: librechat.example.org
   url: https://librechat.example.org
 
+embedding:
+  allowedOrigin: ""
+
 mongodb:
   image: mongo:8.0.20
   storageSize: 8Gi

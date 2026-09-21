@@ -71,7 +71,7 @@ data:
       fileSearch: false
       runCode: false
       mcpServers:
-        use: false
+        use: {{ .Values.mcp.enabled }}
         create: false
         share: false
         public: false
@@ -95,8 +95,8 @@ data:
             model: {{ .Values.vllm.model | quote }}
 {{- end }}
 {{- if .Values.mcp.enabled }}
-            mcpServers:
-              - data-space
+          mcpServers:
+            - data-space
 {{- end }}
 {{- if .Values.mcp.enabled }}
     mcpServers:
@@ -234,6 +234,16 @@ spec:
             - name: http
               containerPort: {{ .Values.service.port }}
           env:
+{{- if .Values.embedding.allowedOrigin }}
+            - name: CSP_ENABLED
+              value: "true"
+            - name: CSP_REPORT_ONLY
+              value: "false"
+            - name: X_FRAME_OPTIONS
+              value: "off"
+            - name: CSP_FRAME_ANCESTORS
+              value: {{ printf "'self' %s" .Values.embedding.allowedOrigin | quote }}
+{{- end }}
             - name: HOST
               value: 0.0.0.0
             - name: PORT
