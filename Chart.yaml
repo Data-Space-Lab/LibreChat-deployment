@@ -1,0 +1,6 @@
+apiVersion: v2
+name: librechat
+description: Restricted LibreChat deployment for the Data Space assistant
+type: application
+version: 0.1.0
+appVersion: "v0.8.8-rc3"

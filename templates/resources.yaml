@@ -1,0 +1,295 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.namespace | quote }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: librechat
+  namespace: {{ .Values.namespace | quote }}
+{{- if .Values.imagePullSecrets }}
+imagePullSecrets:
+{{- range .Values.imagePullSecrets }}
+  - name: {{ . | quote }}
+{{- end }}
+{{- end }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: librechat-credentials-env
+  namespace: {{ .Values.namespace | quote }}
+type: Opaque
+stringData:
+  CREDS_KEY: {{ .Values.secrets.credsKey | quote }}
+  CREDS_IV: {{ .Values.secrets.credsIv | quote }}
+  JWT_SECRET: {{ .Values.secrets.jwtSecret | quote }}
+  JWT_REFRESH_SECRET: {{ .Values.secrets.jwtRefreshSecret | quote }}
+  OPENID_CLIENT_SECRET: {{ .Values.secrets.openidClientSecret | quote }}
+  OPENID_SESSION_SECRET: {{ .Values.secrets.openidSessionSecret | quote }}
+  VLLM_API_KEY: {{ .Values.secrets.vllmApiKey | quote }}
+  MCP_API_KEY: {{ .Values.secrets.mcpApiKey | quote }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: librechat-config
+  namespace: {{ .Values.namespace | quote }}
+data:
+  librechat.yaml: |-
+    version: 1.2.1
+    cache: true
+    endpoints:
+      custom:
+        - name: Data Space vLLM
+          apiKey: "${VLLM_API_KEY}"
+          baseURL: {{ printf "%s" .Values.vllm.baseUrl | quote }}
+          models:
+            default:
+              - {{ .Values.vllm.model | quote }}
+            fetch: false
+          titleConvo: true
+          modelDisplayLabel: Data Space assistant
+      agents:
+        disableBuilder: true
+        allowedProviders:
+          - Data Space vLLM
+        capabilities:
+          - tools
+          - ask_user_question
+          - deferred_tools
+    interface:
+      modelSelect: false
+      parameters: false
+      presets: false
+      prompts: false
+      bookmarks: false
+      memories: false
+      multiConvo: false
+      marketplace: false
+      webSearch: false
+      fileSearch: false
+      runCode: false
+      mcpServers: false
+    modelSpecs:
+      enforce: true
+      prioritize: true
+      list:
+        - name: data-space-assistant
+          label: Data Space assistant
+          preset:
+{{- if .Values.assistant.agentId }}
+            endpoint: agents
+            agent_id: {{ .Values.assistant.agentId | quote }}
+{{- else }}
+            endpoint: Data Space vLLM
+            model: {{ .Values.vllm.model | quote }}
+{{- end }}
+{{- if .Values.mcp.enabled }}
+            mcpServers:
+              - data-space
+{{- end }}
+{{- if .Values.mcp.enabled }}
+    mcpServers:
+      data-space:
+        title: Data Space connector tools
+        type: streamable-http
+        url: {{ .Values.mcp.url | quote }}
+        chatMenu: false
+        serverInstructions: true
+{{- if .Values.secrets.mcpApiKey }}
+        headers:
+          X-API-Key: "${MCP_API_KEY}"
+{{- else if .Values.mcp.useOpenIdToken }}
+        headers:
+          Authorization: "Bearer {{`{{LIBRECHAT_OPENID_ACCESS_TOKEN}}`}}"
+{{- end }}
+{{- end }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: librechat-mongodb
+  namespace: {{ .Values.namespace | quote }}
+spec:
+  accessModes: [ReadWriteOnce]
+  {{- if .Values.mongodb.storageClass }}
+  storageClassName: {{ .Values.mongodb.storageClass | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.mongodb.storageSize | quote }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: librechat-data
+  namespace: {{ .Values.namespace | quote }}
+spec:
+  accessModes: [ReadWriteOnce]
+  {{- if .Values.librechat.storageClass }}
+  storageClassName: {{ .Values.librechat.storageClass | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.librechat.storageSize | quote }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: librechat-mongodb
+  namespace: {{ .Values.namespace | quote }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: librechat-mongodb
+  template:
+    metadata:
+      labels:
+        app: librechat-mongodb
+    spec:
+      containers:
+        - name: mongodb
+          image: {{ .Values.mongodb.image | quote }}
+          args: ["--bind_ip_all", "--noauth"]
+          ports:
+            - name: mongodb
+              containerPort: 27017
+          resources:
+{{ toYaml .Values.mongodbResources | indent 12 }}
+          readinessProbe:
+            exec:
+              command: ["mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          volumeMounts:
+            - name: data
+              mountPath: /data/db
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: librechat-mongodb
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: librechat-mongodb
+  namespace: {{ .Values.namespace | quote }}
+spec:
+  selector:
+    app: librechat-mongodb
+  ports:
+    - name: mongodb
+      port: 27017
+      targetPort: mongodb
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: librechat
+  namespace: {{ .Values.namespace | quote }}
+spec:
+  replicas: {{ .Values.replicas }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: librechat
+  template:
+    metadata:
+      labels:
+        app: librechat
+    spec:
+      serviceAccountName: librechat
+      containers:
+        - name: librechat
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+          env:
+            - name: HOST
+              value: 0.0.0.0
+            - name: PORT
+              value: {{ .Values.service.port | quote }}
+            - name: DOMAIN_CLIENT
+              value: {{ .Values.domain.url | quote }}
+            - name: DOMAIN_SERVER
+              value: {{ .Values.domain.url | quote }}
+            - name: MONGO_URI
+              value: mongodb://librechat-mongodb:27017/LibreChat
+            - name: SEARCH
+              value: "false"
+            - name: ALLOW_REGISTRATION
+              value: {{ .Values.librechat.allowRegistration | quote }}
+            - name: ALLOW_EMAIL_LOGIN
+              value: {{ .Values.librechat.allowEmailLogin | quote }}
+            - name: ALLOW_SOCIAL_LOGIN
+              value: {{ .Values.librechat.allowSocialLogin | quote }}
+            - name: ALLOW_SOCIAL_REGISTRATION
+              value: {{ .Values.librechat.allowSocialRegistration | quote }}
+{{- if .Values.oidc.enabled }}
+            - name: OPENID_CALLBACK_URL
+              value: /oauth/openid/callback
+            - name: OPENID_SCOPE
+              value: {{ .Values.oidc.scope | quote }}
+            - name: OPENID_REUSE_TOKENS
+              value: {{ .Values.oidc.reuseTokens | quote }}
+            - name: OPENID_USE_PKCE
+              value: "true"
+            - name: OPENID_ISSUER
+              value: {{ .Values.oidc.issuer | quote }}
+            - name: OPENID_CLIENT_ID
+              value: {{ .Values.oidc.clientId | quote }}
+            - name: OPENID_AUDIENCE
+              value: {{ .Values.oidc.audience | quote }}
+{{- end }}
+          envFrom:
+            - secretRef:
+                name: librechat-credentials-env
+          volumeMounts:
+            - name: config
+              mountPath: /app/librechat.yaml
+              subPath: librechat.yaml
+            - name: data
+              mountPath: /app/data
+            - name: data
+              mountPath: /app/uploads
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 20
+      volumes:
+        - name: config
+          configMap:
+            name: librechat-config
+        - name: data
+          persistentVolumeClaim:
+            claimName: librechat-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: librechat
+  namespace: {{ .Values.namespace | quote }}
+spec:
+  selector:
+    app: librechat
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: http

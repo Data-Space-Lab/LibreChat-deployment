@@ -1,0 +1,22 @@
+{
+  "name": "librechat",
+  "display_name": "Data Space Assistant",
+  "description": "Restricted LibreChat assistant connected to a tenant vLLM endpoint and optional Data Space MCP server.",
+  "repo_url": "https://github.com/Data-Space-Lab/LibreChat-deployment.git",
+  "target_revision": "main",
+  "path": ".",
+  "namespace": "librechat",
+  "enabled": true,
+  "helm_values": "domain:\n  host: librechat.{tenant_host}\n  url: https://librechat.{tenant_host}\noidc:\n  enabled: true\n  issuer: https://dil.collab-cloud.eu/auth/realms/{tenant}\n  clientId: librechat\nvllm:\n  baseUrl: http://vllm.default.svc.cluster.local:8000/v1\nmcp:\n  enabled: false\n",
+  "routes": [
+    {
+      "route_name": "librechat",
+      "service_name": "librechat",
+      "service_namespace": "librechat",
+      "service_port": 3080,
+      "hostname": "librechat.{tenant_host}",
+      "path_prefix": "/",
+      "no_url_rewrite": true
+    }
+  ]
+}

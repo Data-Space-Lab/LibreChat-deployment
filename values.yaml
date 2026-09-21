@@ -1,0 +1,86 @@
+namespace: librechat
+
+image:
+  repository: ghcr.io/danny-avila/librechat
+  tag: v0.8.8-rc3
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+replicas: 1
+
+domain:
+  host: librechat.example.org
+  url: https://librechat.example.org
+
+mongodb:
+  image: mongo:8.0.20
+  storageSize: 8Gi
+  storageClass: ""
+
+librechat:
+  storageSize: 5Gi
+  storageClass: ""
+  allowRegistration: "false"
+  allowEmailLogin: "false"
+  allowSocialLogin: "true"
+  allowSocialRegistration: "true"
+
+assistant:
+  # Set this after creating the restricted agent in LibreChat. When empty,
+  # the model spec uses the configured vLLM endpoint directly.
+  agentId: ""
+
+vllm:
+  baseUrl: http://vllm.default.svc.cluster.local:8000/v1
+  model: data-space-assistant
+
+mcp:
+  enabled: false
+  url: ""
+  # Set this to true only when the MCP endpoint expects the LibreChat user's
+  # reusable OIDC access token.
+  useOpenIdToken: false
+
+oidc:
+  enabled: false
+  issuer: https://dil.collab-cloud.eu/auth/realms/example
+  clientId: librechat
+  audience: ""
+  scope: openid profile email
+  reuseTokens: "false"
+
+secrets:
+  # Replace all placeholder values in a private values file or Kubernetes
+  # Secret before production deployment.
+  credsKey: replace-with-a-stable-32-byte-value
+  credsIv: replace-with-a-stable-16-byte-value
+  jwtSecret: replace-with-a-long-random-secret
+  jwtRefreshSecret: replace-with-a-different-long-random-secret
+  openidClientSecret: replace-with-keycloak-client-secret
+  openidSessionSecret: replace-with-a-long-random-session-secret
+  vllmApiKey: "dummy"
+  mcpApiKey: ""
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+    ephemeral-storage: 256Mi
+  limits:
+    cpu: 1
+    memory: 2Gi
+    ephemeral-storage: 1Gi
+
+mongodbResources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+    ephemeral-storage: 128Mi
+  limits:
+    cpu: 500m
+    memory: 1Gi
+    ephemeral-storage: 512Mi
+
+service:
+  port: 3080
