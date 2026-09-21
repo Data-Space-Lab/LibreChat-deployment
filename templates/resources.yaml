@@ -67,7 +67,6 @@ data:
       bookmarks: false
       memories: false
       multiConvo: false
-      marketplace: false
       webSearch: false
       fileSearch: false
       runCode: false
