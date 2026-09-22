@@ -109,6 +109,9 @@ data:
 {{- if .Values.secrets.mcpApiKey }}
         headers:
           X-API-Key: "${MCP_API_KEY}"
+{{- else if .Values.mcp.authorization }}
+        headers:
+          Authorization: {{ .Values.mcp.authorization | quote }}
 {{- else if .Values.mcp.useOpenIdToken }}
         headers:
           Authorization: "Bearer {{`{{LIBRECHAT_OPENID_ACCESS_TOKEN}}`}}"

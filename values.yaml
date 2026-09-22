@@ -41,6 +41,9 @@ vllm:
 mcp:
   enabled: false
   url: ""
+  # Optional fixed Authorization header for a connector configured with
+  # json-header-any or static-bearer authentication.
+  authorization: ""
   # Set this to true only when the MCP endpoint expects the LibreChat user's
   # reusable OIDC access token.
   useOpenIdToken: false
