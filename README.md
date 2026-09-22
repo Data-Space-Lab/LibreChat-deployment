@@ -70,6 +70,36 @@ The UI is restricted to the configured Data Space assistant model. Model
 selection, presets, web search, file search, code execution, and MCP picker
 visibility are disabled in `librechat.yaml`.
 
+## Login and speech input
+
+The material deployment intentionally disables local registration and email
+login. Create a confidential OpenID Connect client named `librechat` in the
+`material` Keycloak realm, with:
+
+```text
+Valid redirect URI: https://librechat.material.dil.collab-cloud.eu/oauth/openid/callback
+Web origin:        https://librechat.material.dil.collab-cloud.eu
+```
+
+Enable standard authorization-code flow, copy the generated client secret, and
+configure the Argo application with:
+
+```yaml
+oidc:
+  enabled: true
+  issuer: https://dil.collab-cloud.eu/auth/realms/material
+  clientId: librechat
+  scope: openid profile email
+secrets:
+  openidClientSecret: <client-secret>
+  openidSessionSecret: <random-stable-secret>
+```
+
+The deployment enables browser speech by default. The microphone button uses
+the browser Web Speech API over HTTPS, so no STT provider key is required. The
+dashboard iframe grants microphone permission to the LibreChat origin. Browser
+speech support depends on the browser; Chrome or Edge is recommended.
+
 ## Data Space MCP server
 
 Enable MCP only after the MCP service and its authentication are available:

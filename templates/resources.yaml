@@ -40,6 +40,23 @@ data:
   librechat.yaml: |-
     version: 1.2.1
     cache: true
+{{- if .Values.speech.enabled }}
+    speech:
+      speechTab:
+        conversationMode: {{ .Values.speech.conversationMode }}
+        advancedMode: {{ .Values.speech.advancedMode }}
+        speechToText:
+          engineSTT: {{ .Values.speech.sttEngine | quote }}
+          languageSTT: {{ .Values.speech.sttLanguage | quote }}
+          autoTranscribeAudio: {{ .Values.speech.autoTranscribeAudio }}
+          autoSendText: {{ .Values.speech.autoSendText }}
+        textToSpeech:
+          engineTTS: {{ .Values.speech.ttsEngine | quote }}
+          languageTTS: {{ .Values.speech.ttsLanguage | quote }}
+          automaticPlayback: {{ .Values.speech.automaticPlayback }}
+          playbackRate: {{ .Values.speech.playbackRate }}
+          cacheTTS: {{ .Values.speech.cacheTts }}
+{{- end }}
     endpoints:
       custom:
         - name: Data Space vLLM

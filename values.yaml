@@ -38,6 +38,22 @@ vllm:
   baseUrl: http://vllm.default.svc.cluster.local:8000/v1
   model: data-space-assistant
 
+speech:
+  # Browser speech uses the HTTPS browser Web Speech API and needs no server
+  # API key. The dashboard iframe grants the microphone permission.
+  enabled: true
+  conversationMode: false
+  advancedMode: false
+  sttEngine: browser
+  sttLanguage: English (US)
+  autoTranscribeAudio: false
+  autoSendText: -1
+  ttsEngine: browser
+  ttsLanguage: en
+  automaticPlayback: false
+  playbackRate: 1
+  cacheTts: true
+
 mcp:
   enabled: false
   url: ""
