@@ -121,16 +121,16 @@ data:
         title: Data Space connector tools
         type: streamable-http
         url: {{ .Values.mcp.url | quote }}
+        requiresOAuth: false
         chatMenu: false
         serverInstructions: true
-{{- if .Values.secrets.mcpApiKey }}
         headers:
+          Accept: "text/event-stream, application/json"
+{{- if .Values.secrets.mcpApiKey }}
           X-API-Key: "${MCP_API_KEY}"
 {{- else if .Values.mcp.authorization }}
-        headers:
           Authorization: {{ .Values.mcp.authorization | quote }}
 {{- else if .Values.mcp.useOpenIdToken }}
-        headers:
           Authorization: "Bearer {{`{{LIBRECHAT_OPENID_ACCESS_TOKEN}}`}}"
 {{- end }}
 {{- end }}

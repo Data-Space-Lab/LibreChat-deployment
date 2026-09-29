@@ -116,12 +116,15 @@ Enable MCP only after the MCP service and its authentication are available:
 mcp:
   enabled: true
   url: https://mcp.example.org/mcp
+  authorization: "Bearer <mcp-token>"
   useOpenIdToken: true
 ```
 
 For a static MCP API key, put it in a private values override as
 `secrets.mcpApiKey`. The MCP server remains server-side; the browser never sees
-the key.
+the key. Streamable HTTP is configured with OAuth discovery disabled and with
+the `Accept: text/event-stream, application/json` negotiation header required
+by MCP servers that support both JSON and event-stream responses.
 
 ## Manual deployment
 
