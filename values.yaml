@@ -36,7 +36,7 @@ assistant:
 
 vllm:
   baseUrl: http://connector1.ouludatalab.fi:8000/v1
-  model: deepseek-r1-distill-qwen-14b
+  model: qwen2.5-7b-instruct
 
 speech:
   # Browser speech uses the HTTPS browser Web Speech API and needs no server

@@ -64,7 +64,7 @@ that is actually exposed by that vLLM instance:
 ```yaml
 vllm:
   baseUrl: http://connector1.ouludatalab.fi:8000/v1
-  model: deepseek-r1-distill-qwen-14b
+  model: qwen2.5-7b-instruct
 secrets:
   vllmApiKey: <vllm-api-key>
 ```
