@@ -233,6 +233,9 @@ spec:
     metadata:
       labels:
         app: librechat
+      annotations:
+        checksum/librechat-config: {{ printf "%s|%s|%t|%s|%s" .Values.vllm.baseUrl .Values.vllm.model .Values.mcp.enabled .Values.mcp.url .Values.mcp.authorization | sha256sum | quote }}
+        checksum/librechat-credentials: {{ printf "%s|%s|%s" .Values.secrets.vllmApiKey .Values.secrets.mcpApiKey .Values.secrets.jwtSecret | sha256sum | quote }}
     spec:
       serviceAccountName: librechat
       initContainers:
