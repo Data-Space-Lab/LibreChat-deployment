@@ -35,8 +35,8 @@ assistant:
   agentId: ""
 
 vllm:
-  baseUrl: http://vllm.default.svc.cluster.local:8000/v1
-  model: data-space-assistant
+  baseUrl: http://connector1.ouludatalab.fi:8000/v1
+  model: deepseek-r1-distill-qwen-14b
 
 speech:
   # Browser speech uses the HTTPS browser Web Speech API and needs no server
@@ -81,7 +81,8 @@ secrets:
   jwtRefreshSecret: replace-with-a-different-long-random-secret
   openidClientSecret: replace-with-keycloak-client-secret
   openidSessionSecret: replace-with-a-long-random-session-secret
-  vllmApiKey: "dummy"
+  # Supply this through a private values override or an Argo parameter.
+  vllmApiKey: ""
   mcpApiKey: ""
 
 resources:

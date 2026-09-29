@@ -58,13 +58,21 @@ controlled by the corresponding `OPENID_*` values and client secret.
 
 ## vLLM
 
-Point the custom endpoint at the internal vLLM OpenAI-compatible API:
+Point the custom endpoint at the vLLM OpenAI-compatible API and use a model
+that is actually exposed by that vLLM instance:
 
 ```yaml
 vllm:
-  baseUrl: http://vllm.default.svc.cluster.local:8000/v1
-  model: data-space-assistant
+  baseUrl: http://connector1.ouludatalab.fi:8000/v1
+  model: deepseek-r1-distill-qwen-14b
+secrets:
+  vllmApiKey: <vllm-api-key>
 ```
+
+The API key is sent only by the LibreChat backend. Do not put it in frontend
+configuration or commit it to the repository. Verify the endpoint with
+`GET /v1/models` before deploying; the model name must match one of the
+returned IDs.
 
 The UI is restricted to the configured Data Space assistant model. Model
 selection, presets, web search, file search, code execution, and MCP picker
