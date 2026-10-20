@@ -1,5 +1,20 @@
 # LibreChat Deployment
 
+## Connector Directory Tools
+
+The `data-space` MCP server exposes `list_dataspaces`, `list_connectors`, and
+`get_connector_info` when running the updated DIL Connector. LibreChat discovers
+these tools dynamically and provides them to the configured vLLM model; no
+separate copies of the tool implementations are needed in vLLM.
+
+Enable `mcp.enabled`, set the current tenant's `mcp.url`, and keep credentials in
+private configuration. `assistant.instructions` guides the model to select an
+onboarded dataspace, list its connectors, and retrieve public company details.
+Unverified peers and missing company fields must not be presented as verified.
+After upgrading the connector and this configuration, restart LibreChat and
+start a new conversation to refresh tool discovery. Saved agents must have
+`data-space` selected as an MCP server too.
+
 GitOps deployment for a restricted LibreChat instance used by the Data Space
 Dashboard assistant.
 
